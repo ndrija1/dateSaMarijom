@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Imam jedno pitanje...</title>
+
+<!-- ====================================================================
+     PODESI OVDE  (samo ovaj deo menjas)
+     ====================================================================
+     1) Obavezno: stavi svoj mejl u CONFIG.toEmail dole u <script>.
+     2) Po zelji: ako hoces da ti odgovor stigne SAM, bez ijednog
+        dodatnog klika, popuni emailjs kljuceve (uputstvo u poruci uz fajl).
+        Ako ih ostavis prazne, otvorice se njen mejl vec popunjen
+        (ona samo klikne Posalji).
+==================================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --plum:#2a1521;
+    --wine:#4a1f38;
+    --rose:#e8829b;
+    --blush:#f7c9d4;
+    --gold:#e8b96a;
+    --cream:#fbf3ec;
+    --cream-dim:rgba(251,243,236,.66);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--cream);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #5a2545 0%, var(--wine) 38%, var(--plum) 78%, #1c0e17 100%);
+    min-height:100dvh;
+    overflow-x:hidden;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 20px;
+  }
+
+  /* lebdeci sloj */
+  #sky{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .drift{position:absolute;bottom:-10vh;will-change:transform,opacity;opacity:0;
+    animation:rise linear infinite}
+  .drift svg{display:block;filter:drop-shadow(0 0 4px rgba(247,201,212,.5)) drop-shadow(0 0 11px rgba(232,130,155,.22))}
+  @keyframes rise{
+    0%{transform:translateY(0) translateX(0) rotate(0deg);opacity:0}
+    8%{opacity:.9}
+    90%{opacity:.85}
+    100%{transform:translateY(-118vh) translateX(var(--sway,20px)) rotate(var(--spin,180deg));opacity:0}
+  }
+
+  /* kartica */
+  .card{
+    position:relative;z-index:2;
+    width:100%;max-width:440px;
+    background:rgba(42,21,33,.34);
+    border:1px solid rgba(247,201,212,.18);
+    border-radius:26px;
+    padding:40px 30px 34px;
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    box-shadow:0 24px 70px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-family:'Inter',sans-serif;font-size:.72rem;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:14px;opacity:.9;
+  }
+  .name-eyebrow{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    text-transform:none;letter-spacing:.02em;font-size:1.75rem;
+    opacity:1;margin-bottom:8px;
+  }
+  h1{
+    font-family:'Cormorant Garamond',serif;font-weight:500;
+    font-size:clamp(2.3rem,9vw,3.4rem);line-height:1.04;letter-spacing:.5px;
+    color:var(--cream);
+  }
+  h1 em{font-style:italic;color:var(--rose)}
+  .lead{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:clamp(1.25rem,5.5vw,1.6rem);color:var(--blush);
+    margin-top:16px;line-height:1.35;
+  }
+
+  /* dugmici */
+  .btns{margin-top:30px;display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap}
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:1rem;
+    border:none;border-radius:999px;padding:15px 34px;cursor:pointer;
+    transition:transform .18s ease, box-shadow .25s ease, opacity .25s ease;
+  }
+  .btn-yes{
+    color:#3a1326;
+    background:linear-gradient(135deg,var(--gold),var(--rose));
+    box-shadow:0 10px 26px rgba(232,130,155,.45);
+  }
+  .btn-yes:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 16px 34px rgba(232,130,155,.6)}
+  .btn-no{
+    color:var(--cream-dim);background:transparent;
+    border:1px solid rgba(247,201,212,.32);position:relative;
+  }
+
+  /* forma */
+  .step{display:none;animation:fade .55s ease both}
+  .step.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .field{text-align:left;margin-top:18px}
+  .field label{
+    display:block;font-size:.82rem;letter-spacing:.04em;color:var(--cream-dim);
+    margin-bottom:7px;font-weight:500;
+  }
+  .field .opt{color:var(--gold);font-size:.74rem;letter-spacing:.06em}
+  input,textarea{
+    width:100%;font-family:'Inter',sans-serif;font-size:1rem;color:var(--cream);
+    background:rgba(251,243,236,.07);
+    border:1px solid rgba(247,201,212,.22);border-radius:14px;
+    padding:13px 15px;outline:none;transition:border-color .2s,background .2s;
+  }
+  input:focus,textarea:focus{border-color:var(--rose);background:rgba(251,243,236,.12)}
+  textarea{resize:vertical;min-height:74px;line-height:1.45}
+  /* native picker boja */
+  input[type="date"],input[type="time"]{color-scheme:dark}
+
+  .send-row{margin-top:26px}
+  .btn-send{
+    width:100%;color:#3a1326;
+    background:linear-gradient(135deg,var(--gold),var(--rose));
+    box-shadow:0 10px 26px rgba(232,130,155,.45);
+  }
+  .btn-send:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(232,130,155,.6)}
+  .hint{margin-top:14px;font-size:.78rem;color:var(--cream-dim)}
+
+  .done h1{margin-top:6px}
+  .heart-big{font-size:3rem;display:block;margin-bottom:6px;animation:beat 1.1s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.18)}45%{transform:scale(1.02)}}
+
+  @media (prefers-reduced-motion: reduce){
+    .drift{animation:none;display:none}
+    .step,.heart-big{animation:none}
+  }
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"></div>
+
+<main class="card">
+  <!-- KORAK 1: pitanje -->
+  <section class="step active" id="step-ask">
+    <p class="eyebrow name-eyebrow">Marija😘</p>
+    <h1>Date <em>samnom?</em></h1>
+    <div class="btns">
+      <button class="btn btn-yes" id="yesBtn" type="button">Da 💗</button>
+      <button class="btn btn-no" id="noBtn" type="button">Ne</button>
+    </div>
+  </section>
+
+  <!-- KORAK 2: detalji -->
+  <section class="step" id="step-form">
+    <p class="eyebrow">znao sam ✨</p>
+    <h1 style="font-size:clamp(2rem,7vw,2.7rem)">Kad i gde se <em>vidimo</em>?</h1>
+
+    <div class="field">
+      <label for="datum">Koji dan ti odgovara?</label>
+      <input type="date" id="datum">
+    </div>
+    <div class="field">
+      <label for="vreme">U koliko sati?</label>
+      <input type="time" id="vreme">
+    </div>
+    <div class="field">
+      <label for="mesto">Gde? <span class="opt">— opciono</span></label>
+      <input type="text" id="mesto" placeholder="npr. kafa u centru" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="poruka">Poruka za mene <span class="opt">— opciono</span></label>
+      <textarea id="poruka" placeholder="..."></textarea>
+    </div>
+
+    <div class="send-row">
+      <button class="btn btn-send" id="sendBtn" type="button">Pošalji ❤️</button>
+      <p class="hint" id="sendHint"></p>
+    </div>
+  </section>
+
+  <!-- KORAK 3: gotovo -->
+  <section class="step done" id="step-done">
+    <span class="heart-big">💞</span>
+    <p class="eyebrow">savršeno</p>
+    <h1>Vidimo se! <em>Jedva čekam.</em></h1>
+    <p class="lead" id="doneSummary"></p>
+  </section>
+</main>
+
+<script>
+/* ===================== PODESAVANJA ===================== */
+const CONFIG = {
+  toEmail: "andrijaursl0099@gmail.com",          // <-- OBAVEZNO: tvoj mejl
+
+  // OPCIONO – za automatsko slanje (bez ijednog dodatnog klika):
+  emailjs: { publicKey: "YdMdKuiB6pEIKV8Bo", serviceId: "service_a1xe914", templateId: "template_pc9vr9f" }
+};
+/* ====================================================== */
+
+/* ---- lebdeci cvetovi i srca ---- */
+(function(){
+  const sky=document.getElementById('sky');
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const petal='<svg width="100%" height="100%" viewBox="0 0 24 24"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe1ea"/><stop offset="1" stop-color="#f0a0b9"/></linearGradient></defs><path d="M12 2.5C15.5 6 17 10.5 14.7 15c-.7 1.4-1.7 2.6-2.7 4-1-1.4-2-2.6-2.7-4C7 10.5 8.5 6 12 2.5z" fill="url(#pg)"/></svg>';
+  const flower='<svg width="100%" height="100%" viewBox="0 0 24 24"><defs><radialGradient id="fg" cx="50%" cy="50%" r="62%"><stop offset="0" stop-color="#ffeaf0"/><stop offset="100%" stop-color="#ef93ad"/></radialGradient></defs><g fill="url(#fg)"><ellipse cx="12" cy="6.2" rx="2.7" ry="4"/><ellipse cx="12" cy="6.2" rx="2.7" ry="4" transform="rotate(72 12 12)"/><ellipse cx="12" cy="6.2" rx="2.7" ry="4" transform="rotate(144 12 12)"/><ellipse cx="12" cy="6.2" rx="2.7" ry="4" transform="rotate(216 12 12)"/><ellipse cx="12" cy="6.2" rx="2.7" ry="4" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2" fill="#f3c969"/></svg>';
+  const heart='<svg width="100%" height="100%" viewBox="0 0 24 24"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9e3"/><stop offset="1" stop-color="#e8607f"/></linearGradient></defs><path d="M12 20.7S3.6 14.6 3.6 8.7C3.6 5.8 5.8 3.7 8.4 3.7c1.8 0 3.1 1 3.6 2.3.5-1.3 1.8-2.3 3.6-2.3 2.6 0 4.8 2.1 4.8 5 0 5.9-8.4 12-8.4 12z" fill="url(#hg)"/></svg>';
+  const shapes=[petal,flower,heart];
+  function spawn(burst){
+    const n=burst?42:26;
+    for(let i=0;i<n;i++){
+      const el=document.createElement('div');
+      el.className='drift';
+      const size=14+Math.random()*22;
+      el.style.width=size+'px';el.style.height=size+'px';
+      el.style.left=(Math.random()*100)+'vw';
+      el.style.setProperty('--sway',(Math.random()*120-60)+'px');
+      el.style.setProperty('--spin',(Math.random()*360-180)+'deg');
+      const dur=(burst? 4+Math.random()*4 : 9+Math.random()*9);
+      el.style.animationDuration=dur+'s';
+      el.style.animationDelay=(burst?Math.random()*0.6:Math.random()*-18)+'s';
+      el.innerHTML=shapes[Math.floor(Math.random()*shapes.length)];
+      sky.appendChild(el);
+      setTimeout(()=>el.remove(), (dur+1)*1000);
+    }
+  }
+  spawn(false);
+  setInterval(()=>spawn(false), 4200);
+  window.__burst=()=>spawn(true);
+})();
+
+/* ---- navigacija koraka ---- */
+function show(id){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---- dugme "Ne" bezi ---- */
+let dodges=0;
+const noBtn=document.getElementById('noBtn');
+function dodge(){
+  dodges++;
+  if(dodges>=3){ noBtn.style.transition='opacity .4s, transform .4s';
+    noBtn.style.opacity='0'; noBtn.style.transform='scale(.4)';
+    setTimeout(()=>noBtn.style.display='none',420); return; }
+  const dx=(Math.random()*200-100), dy=(Math.random()*80-40);
+  noBtn.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/8}deg)`;
+}
+noBtn.addEventListener('mouseenter',dodge);
+noBtn.addEventListener('click',dodge);
+
+/* ---- "Da" ---- */
+document.getElementById('yesBtn').addEventListener('click',()=>{
+  if(window.__burst) window.__burst();
+  show('step-form');
+});
+
+/* ---- slanje ---- */
+function fmtDate(v){
+  if(!v) return '';
+  const [y,m,d]=v.split('-');
+  return `${d}.${m}.${y}.`;
+}
+document.getElementById('sendBtn').addEventListener('click',()=>{
+  const datum=document.getElementById('datum').value;
+  const vreme=document.getElementById('vreme').value;
+  const mesto=document.getElementById('mesto').value.trim();
+  const poruka=document.getElementById('poruka').value.trim();
+  const hint=document.getElementById('sendHint');
+
+  if(!datum||!vreme){ hint.textContent='Izaberi bar dan i vreme 💛'; return; }
+
+  const datumTxt=fmtDate(datum);
+  const lines=[
+    'Marija je rekla DA! 💞',
+    'Dan: '+datumTxt,
+    'Vreme: '+vreme,
+    'Mesto: '+(mesto||'(nije navedeno)'),
+    'Poruka: '+(poruka||'(nema)')
+  ].join('\n');
+
+  // sazetak na ekranu
+  document.getElementById('doneSummary').textContent =
+    datumTxt+' u '+vreme + (mesto? ' · '+mesto : '');
+
+  const ej=CONFIG.emailjs;
+  if(ej.publicKey && ej.serviceId && ej.templateId){
+    // automatsko slanje preko EmailJS
+    hint.textContent='Šaljem...';
+    loadEmailJS(()=>{
+      emailjs.init({publicKey:ej.publicKey});
+      emailjs.send(ej.serviceId, ej.templateId, {
+        to_email:CONFIG.toEmail, datum:datumTxt, vreme:vreme,
+        mesto:mesto||'(nije navedeno)', poruka:poruka||'(nema)', sve:lines
+      }).then(()=>show('step-done'))
+        .catch(()=>{ hint.textContent='Nije uspelo automatski — otvaram mejl...';
+          setTimeout(()=>{mailtoFallback(lines);show('step-done');},600); });
+    });
+  } else {
+    // bez podesavanja: otvori njen mejl vec popunjen
+    mailtoFallback(lines);
+    show('step-done');
+  }
+});
+
+function mailtoFallback(body){
+  const subj=encodeURIComponent('Marija je rekla DA! 💞');
+  window.location.href='mailto:'+encodeURIComponent(CONFIG.toEmail)
+    +'?subject='+subj+'&body='+encodeURIComponent(body);
+}
+function loadEmailJS(cb){
+  if(window.emailjs) return cb();
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+  s.onload=cb; s.onerror=()=>{ document.getElementById('sendHint').textContent='Nema interneta za auto-slanje, otvaram mejl...';
+    mailtoFallback(document.getElementById('doneSummary').textContent); };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>
