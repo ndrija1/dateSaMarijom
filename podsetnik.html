@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Odbrojavanje…</title>
+
+<!-- =====================================================================
+     PODESI OVDE (samo CONFIG dole u <script>):
+     - target:   ciljni trenutak (vec podeseno: 30.06.2026 19:00 po SRB)
+     - title / subtitle: tekst na stranici
+     - toEmail / emailjs: gde stize prijava mejla (tvoj EmailJS)
+===================================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --plum:#2a1521; --wine:#4a1f38; --rose:#e8829b; --blush:#f7c9d4;
+    --gold:#e8b96a; --cream:#fbf3ec; --cream-dim:rgba(251,243,236,.66);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;color:var(--cream);
+    background:radial-gradient(120% 90% at 50% -10%, #5a2545 0%, var(--wine) 38%, var(--plum) 78%, #1c0e17 100%);
+    min-height:100dvh;overflow-x:hidden;position:relative;
+    display:flex;align-items:center;justify-content:center;padding:28px 20px;
+  }
+  #sky{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .drift{position:absolute;bottom:-10vh;opacity:0;animation:rise linear infinite;will-change:transform,opacity}
+  .drift svg{display:block;filter:drop-shadow(0 0 4px rgba(247,201,212,.5)) drop-shadow(0 0 11px rgba(232,130,155,.22))}
+  @keyframes rise{0%{transform:translateY(0) translateX(0) rotate(0)}8%{opacity:.85}90%{opacity:.8}
+    100%{transform:translateY(-118vh) translateX(var(--sway,20px)) rotate(var(--spin,180deg));opacity:0}}
+
+  .card{position:relative;z-index:2;width:100%;max-width:480px;text-align:center;
+    background:rgba(42,21,33,.34);border:1px solid rgba(247,201,212,.18);border-radius:26px;
+    padding:42px 28px 34px;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    box-shadow:0 24px 70px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);}
+
+  .eyebrow{font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);opacity:.9}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(2.1rem,8vw,3rem);
+    line-height:1.05;margin-top:10px}
+  h1 em{font-style:italic;color:var(--rose)}
+  .sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--blush);
+    font-size:clamp(1.15rem,4.8vw,1.45rem);margin-top:8px}
+
+  /* odbrojavanje */
+  .clock{display:flex;justify-content:center;gap:10px;margin:30px 0 6px}
+  .unit{flex:1;max-width:92px;background:rgba(251,243,236,.06);border:1px solid rgba(247,201,212,.16);
+    border-radius:16px;padding:14px 4px 10px}
+  .num{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(2rem,11vw,3.2rem);
+    line-height:1;color:var(--cream);text-shadow:0 0 18px rgba(232,185,106,.35);font-variant-numeric:tabular-nums}
+  .lab{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cream-dim);margin-top:8px}
+  #sec .num{color:var(--rose)}
+  .reached .num{color:var(--gold)}
+
+  /* dugmici / forma */
+  .actions{margin-top:24px}
+  .row{display:flex;gap:10px;margin-top:14px}
+  input{flex:1;font-family:'Inter',sans-serif;font-size:1rem;color:var(--cream);
+    background:rgba(251,243,236,.07);border:1px solid rgba(247,201,212,.22);border-radius:14px;
+    padding:13px 15px;outline:none;transition:border-color .2s,background .2s;min-width:0}
+  input:focus{border-color:var(--rose);background:rgba(251,243,236,.12)}
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:.98rem;border:none;border-radius:14px;
+    padding:13px 20px;cursor:pointer;transition:transform .18s,box-shadow .25s,opacity .2s;white-space:nowrap}
+  .btn-primary{color:#3a1326;background:linear-gradient(135deg,var(--gold),var(--rose));
+    box-shadow:0 10px 26px rgba(232,130,155,.4)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(232,130,155,.55)}
+  .btn-cal{width:100%;margin-top:14px;color:var(--cream);background:transparent;
+    border:1px solid rgba(247,201,212,.34)}
+  .btn-cal:hover{background:rgba(247,201,212,.1)}
+  .note{font-size:.78rem;color:var(--cream-dim);margin-top:12px;line-height:1.5}
+  .ok{color:var(--gold)}
+
+  @media (prefers-reduced-motion: reduce){.drift{display:none}}
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"></div>
+
+<main class="card">
+  <p class="eyebrow" id="eyebrow">odbrojavanje</p>
+  <h1 id="title">Naš <em>izlazak</em></h1>
+  <p class="sub" id="sub">Još malo pa se vidimo 💞</p>
+
+  <div class="clock" id="clock">
+    <div class="unit"><div class="num" id="d">00</div><div class="lab">dana</div></div>
+    <div class="unit"><div class="num" id="h">00</div><div class="lab">sati</div></div>
+    <div class="unit"><div class="num" id="m">00</div><div class="lab">min</div></div>
+    <div class="unit" id="sec"><div class="num" id="s">00</div><div class="lab">sek</div></div>
+  </div>
+
+  <div class="actions">
+    <div class="row">
+      <input type="email" id="email" placeholder="tvoj@mejl.com" autocomplete="email">
+      <button class="btn btn-primary" id="subBtn" type="button">Podseti me</button>
+    </div>
+    <button class="btn btn-cal" id="calBtn" type="button">📅 Dodaj u kalendar (podseti me 24h pre)</button>
+    <p class="note" id="note">Kalendar te podseti automatski 24h ranije — radi i bez interneta.</p>
+  </div>
+</main>
+
+<script>
+/* ===================== PODESAVANJA ===================== */
+const CONFIG = {
+  target: "2026-06-30T19:00:00+02:00",   // 30.06.2026 u 19:00 po srpskom vremenu
+  title: 'Naš <em>izlazak</em>',
+  subtitle: "Još malo pa se vidimo 💞",
+  eventName: "Naš izlazak 💞",
+
+  toEmail: "andrijaursl0099@gmail.com",
+  emailjs: { publicKey:"YdMdKuiB6pEIKV8Bo", serviceId:"service_a1xe914", templateId:"template_pc9vr9f" }
+};
+/* ====================================================== */
+
+document.getElementById('title').innerHTML = CONFIG.title;
+document.getElementById('sub').textContent = CONFIG.subtitle;
+
+/* ---- lebdeci cvetovi ---- */
+(function(){
+  const sky=document.getElementById('sky');
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const petal='<svg width="100%" height="100%" viewBox="0 0 24 24"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe1ea"/><stop offset="1" stop-color="#f0a0b9"/></linearGradient></defs><path d="M12 2.5C15.5 6 17 10.5 14.7 15c-.7 1.4-1.7 2.6-2.7 4-1-1.4-2-2.6-2.7-4C7 10.5 8.5 6 12 2.5z" fill="url(#pg)"/></svg>';
+  const heart='<svg width="100%" height="100%" viewBox="0 0 24 24"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9e3"/><stop offset="1" stop-color="#e8607f"/></linearGradient></defs><path d="M12 20.7S3.6 14.6 3.6 8.7C3.6 5.8 5.8 3.7 8.4 3.7c1.8 0 3.1 1 3.6 2.3.5-1.3 1.8-2.3 3.6-2.3 2.6 0 4.8 2.1 4.8 5 0 5.9-8.4 12-8.4 12z" fill="url(#hg)"/></svg>';
+  const shapes=[petal,heart];
+  function spawn(n){
+    for(let i=0;i<n;i++){
+      const el=document.createElement('div');el.className='drift';
+      const size=12+Math.random()*18;el.style.width=size+'px';el.style.height=size+'px';
+      el.style.left=(Math.random()*100)+'vw';
+      el.style.setProperty('--sway',(Math.random()*120-60)+'px');
+      el.style.setProperty('--spin',(Math.random()*360-180)+'deg');
+      const dur=10+Math.random()*9;el.style.animationDuration=dur+'s';
+      el.style.animationDelay=(Math.random()*-19)+'s';
+      el.innerHTML=shapes[Math.floor(Math.random()*shapes.length)];
+      sky.appendChild(el);setTimeout(()=>el.remove(),(dur+1)*1000);
+    }
+  }
+  spawn(20);setInterval(()=>spawn(20),5000);
+})();
+
+/* ---- odbrojavanje ---- */
+const target=new Date(CONFIG.target).getTime();
+const pad=n=>String(n).padStart(2,'0');
+function tickClock(){
+  const diff=target-Date.now();
+  if(diff<=0){
+    document.getElementById('clock').classList.add('reached');
+    document.getElementById('d').textContent='00';document.getElementById('h').textContent='00';
+    document.getElementById('m').textContent='00';document.getElementById('s').textContent='00';
+    document.getElementById('eyebrow').textContent='stiglo je';
+    document.getElementById('sub').textContent='Vreme je! 💞';
+    clearInterval(timer);return;
+  }
+  const sec=Math.floor(diff/1000);
+  document.getElementById('d').textContent=pad(Math.floor(sec/86400));
+  document.getElementById('h').textContent=pad(Math.floor(sec%86400/3600));
+  document.getElementById('m').textContent=pad(Math.floor(sec%3600/60));
+  document.getElementById('s').textContent=pad(sec%60);
+}
+tickClock();const timer=setInterval(tickClock,1000);
+
+/* ---- prijava mejla (javi se tebi preko EmailJS) ---- */
+document.getElementById('subBtn').addEventListener('click',()=>{
+  const email=document.getElementById('email').value.trim();
+  const note=document.getElementById('note');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ note.textContent='Upiši ispravan mejl 💛';return; }
+  const ej=CONFIG.emailjs;
+  function done(){ note.innerHTML='<span class="ok">Sačuvano! 💞</span> Dodaj i podsetnik u kalendar ispod da ti zvrcne 24h ranije.';
+    document.getElementById('email').value=''; }
+  if(ej.publicKey&&ej.serviceId&&ej.templateId){
+    note.textContent='Šaljem...';
+    loadEmailJS(()=>{
+      emailjs.init({publicKey:ej.publicKey});
+      emailjs.send(ej.serviceId,ej.templateId,{
+        to_email:CONFIG.toEmail, datum:'30.06.2026', vreme:'19:00', mesto:'-',
+        poruka:'Prijava za podsetnik: '+email, sve:'Prijava za podsetnik: '+email
+      }).then(done).catch(()=>{ note.textContent='Nije uspelo slanje — probaj kalendar dugme ispod.'; });
+    });
+  } else { done(); }
+});
+
+function loadEmailJS(cb){
+  if(window.emailjs) return cb();
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+  s.onload=cb;s.onerror=()=>{document.getElementById('note').textContent='Nema interneta za slanje — koristi kalendar dugme.';};
+  document.head.appendChild(s);
+}
+
+/* ---- kalendar (.ics) sa alarmom 24h pre ---- */
+document.getElementById('calBtn').addEventListener('click',()=>{
+  const start=new Date(CONFIG.target);
+  const end=new Date(start.getTime()+60*60*1000);
+  const z=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const ics=[
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//podsetnik//SR','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT','UID:'+Date.now()+'@podsetnik','DTSTAMP:'+z(new Date()),
+    'DTSTART:'+z(start),'DTEND:'+z(end),
+    'SUMMARY:'+CONFIG.eventName,
+    'DESCRIPTION:Podsetnik 24h ranije',
+    'BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:'+CONFIG.eventName,'END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='podsetnik.ics';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  document.getElementById('note').innerHTML='<span class="ok">Dodato u kalendar 📅</span> Podsetnik ti stiže 24h pre.';
+});
+</script>
+</body>
+</html>
