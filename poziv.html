@@ -47,6 +47,7 @@
 
   /* lebdeci sloj */
   #sky{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:1}
   .drift{position:absolute;bottom:-10vh;will-change:transform,opacity;opacity:0;
     animation:rise linear infinite}
   .drift svg{display:block;filter:drop-shadow(0 0 4px rgba(247,201,212,.5)) drop-shadow(0 0 11px rgba(232,130,155,.22))}
@@ -152,6 +153,7 @@
 </head>
 <body>
 <div id="sky" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 
 <main class="card">
   <!-- KORAK 1: pitanje -->
@@ -242,10 +244,58 @@ const CONFIG = {
   window.__burst=()=>spawn(true);
 })();
 
+/* ---- vatromet ---- */
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ window.__fireworks=()=>{}; return; }
+  const c=document.getElementById('fx'), ctx=c.getContext('2d');
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  let W,H,parts=[],raf=null;
+  function resize(){ W=c.width=innerWidth*dpr; H=c.height=innerHeight*dpr;
+    c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px'; }
+  resize(); addEventListener('resize',resize);
+  const COLORS=['#e8829b','#f7c9d4','#e8b96a','#ffd9e3','#ffffff'];
+  function explode(x,y){
+    const n=46+Math.random()*26, col=COLORS[Math.floor(Math.random()*COLORS.length)];
+    for(let i=0;i<n;i++){
+      const a=(Math.PI*2*i)/n + Math.random()*0.3;
+      const sp=(2+Math.random()*4)*dpr;
+      parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,
+        decay:0.012+Math.random()*0.016,
+        col:Math.random()<0.25?'#ffffff':col, size:(1.6+Math.random()*2)*dpr});
+    }
+  }
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      p.vx*=0.985; p.vy=p.vy*0.985+0.045*dpr; // gravitacija
+      p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
+      if(p.life<=0){ parts.splice(i,1); continue; }
+      ctx.globalAlpha=Math.max(p.life,0); ctx.fillStyle=p.col;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,7); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    raf = parts.length ? requestAnimationFrame(tick) : null;
+  }
+  function ensure(){ if(!raf) raf=requestAnimationFrame(tick); }
+  window.__fireworks=function(ms){
+    const end=Date.now()+(ms||2000);
+    (function launch(){
+      explode((0.2+Math.random()*0.6)*W,(0.14+Math.random()*0.4)*H);
+      ensure();
+      if(Date.now()<end) setTimeout(launch, 260+Math.random()*420);
+    })();
+  };
+})();
+
 /* ---- navigacija koraka ---- */
 function show(id){
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+}
+function goDone(){
+  show('step-done');
+  if(window.__fireworks) window.__fireworks(5200);
 }
 
 /* ---- dugme "Ne" bezi ---- */
@@ -265,6 +315,7 @@ noBtn.addEventListener('click',dodge);
 /* ---- "Da" ---- */
 document.getElementById('yesBtn').addEventListener('click',()=>{
   if(window.__burst) window.__burst();
+  if(window.__fireworks) window.__fireworks(1700);
   show('step-form');
 });
 
@@ -305,14 +356,14 @@ document.getElementById('sendBtn').addEventListener('click',()=>{
       emailjs.send(ej.serviceId, ej.templateId, {
         to_email:CONFIG.toEmail, datum:datumTxt, vreme:vreme,
         mesto:mesto||'(nije navedeno)', poruka:poruka||'(nema)', sve:lines
-      }).then(()=>show('step-done'))
+      }).then(()=>goDone())
         .catch(()=>{ hint.textContent='Nije uspelo automatski — otvaram mejl...';
-          setTimeout(()=>{mailtoFallback(lines);show('step-done');},600); });
+          setTimeout(()=>{mailtoFallback(lines);goDone();},600); });
     });
   } else {
     // bez podesavanja: otvori njen mejl vec popunjen
     mailtoFallback(lines);
-    show('step-done');
+    goDone();
   }
 });
 
